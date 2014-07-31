@@ -21,7 +21,7 @@ public class SocketClient extends CordovaPlugin{
 	
 	private HashMap<String,Socket> socketMap = new HashMap<String,Socket>();
 	private JSONArray resultList = new JSONArray();
-	private static final int SERVERPORT = 5000;
+	private static final int SERVERPORT = 23;
 	
 	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -57,12 +57,14 @@ public class SocketClient extends CordovaPlugin{
 	        	 ArrayList<Thread> threadList = new ArrayList<Thread>();
 	        	 for(int index=0; index<args.length(); index++){
 	        		 String ip = args.getString(index);
-	        		 threadList.add(new Thread(new ClientThread(ip)));
+	        		 Thread thread = new Thread(new ClientThread(ip,callbackContext));
+	        		 thread.start();
+	        		 threadList.add(thread);
 	        	 }
 	        	 for(int i = 0; i < threadList.size(); i++){
-	        		 threadList.get(i).join();
+	        		 //threadList.get(i).join();
 	        	 }
-	        	 callbackContext.success(resultList);
+	        	 //callbackContext.success(resultList);
 	         } else {
 	             callbackContext.error("No IP addresses are input.");
 	         }			 
@@ -97,19 +99,21 @@ public class SocketClient extends CordovaPlugin{
 	 class ClientThread implements Runnable{
 		
 		private String serverIp;
+		private CallbackContext callbackContext;
 
-		ClientThread(String serverIp){
-			this.serverIp = serverIp; 
+		ClientThread(String serverIp,CallbackContext callbackContext){
+			this.serverIp = serverIp;
+			this.callbackContext = callbackContext;
 		}
 		
 		@Override
 		public void run() {
 			try {
 				InetAddress serverAddr = InetAddress.getByName(serverIp);
-				java.net.Socket socket = new java.net.Socket(serverAddr, SERVERPORT);
+				Socket socket = new Socket(serverAddr, SERVERPORT);
 				socketMap.put(serverIp, socket);
-				
 				resultList.put("Socket connection with "+ serverIp +" is established.");
+				callbackContext.success(resultList);
 			} catch (UnknownHostException e) {
 				System.out.println(e.getMessage());
 				resultList.put("Socket connection with "+ serverIp +" failed.");

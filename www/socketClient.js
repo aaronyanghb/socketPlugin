@@ -1,20 +1,20 @@
 var socketClient = {
-    connect: function(ip, successCallback,errorCallback) {
+    connect: function(addressList, successCallback,errorCallback) {
         cordova.exec(
         	successCallback, // success callback function
         	errorCallback, // error callback function
             'SocketClient', // mapped to our native Java class called "CalendarPlugin"
             'connect', // with this action name
-            [ip]
+            addressList
         ); 
      },
-     send:function(ip,message,successCallback,errorCallback) {
+     send:function(message,successCallback,errorCallback) {
          cordova.exec(
         	successCallback, // success callback function
         	errorCallback, // error callback function
             'SocketClient', // mapped to our native Java class called "CalendarPlugin"
             'send', // with this action name
-            [ip,message]
+            [message]
         );     
      }
 }
