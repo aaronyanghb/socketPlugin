@@ -1,9 +1,9 @@
-var socket = {
+var socketClient = {
     connect: function(ip, successCallback,errorCallback) {
         cordova.exec(
         	successCallback, // success callback function
         	errorCallback, // error callback function
-            'Socket', // mapped to our native Java class called "CalendarPlugin"
+            'SocketClient', // mapped to our native Java class called "CalendarPlugin"
             'connect', // with this action name
             [ip]
         ); 
@@ -12,13 +12,13 @@ var socket = {
          cordova.exec(
         	successCallback, // success callback function
         	errorCallback, // error callback function
-            'Socket', // mapped to our native Java class called "CalendarPlugin"
+            'SocketClient', // mapped to our native Java class called "CalendarPlugin"
             'send', // with this action name
             [ip,message]
         );     
      }
 }
 
-module.exports = socket;
+module.exports = socketClient;
 
 

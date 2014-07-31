@@ -1,6 +1,13 @@
 package com.example.myPlugin;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.cordova.CallbackContext;
@@ -10,7 +17,7 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class Socket extends CordovaPlugin{
+public class SocketClient extends CordovaPlugin{
 	
 	private HashMap<String,Socket> socketMap = new HashMap<String,Socket>();
 	private JSONArray resultList = new JSONArray();
@@ -28,7 +35,7 @@ public class Socket extends CordovaPlugin{
             return true;
         }
         if ("send".equals(action)) {
-            this.connect(args,callbackContext);
+            this.send(args,callbackContext);
             return true;
         }
         return false;  // Returning false results in a "MethodNotFound" error.
@@ -36,34 +43,24 @@ public class Socket extends CordovaPlugin{
 	 
 	 @Override
     public void onDestroy() {
-		try {
-			resultList = new JSONArray();
-			serverSocket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		 resultList = new JSONArray();
     }
 	 
 	 @Override
     public void onReset() {
-		try {
-			resultList = new JSONArray();
-			serverSocket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		 resultList = new JSONArray();
     }
 	 
-	 private void connect(String args, CallbackContext callbackContext) {
+	 private void connect(JSONArray args, CallbackContext callbackContext) {
 		 try{
 	         if (args != null && args.length() > 0) {
-	        	 AarryList<Thread> threadList = new AarryList<Thread>();
-	        	 for(int index=0; args.index<length; index++){
+	        	 ArrayList<Thread> threadList = new ArrayList<Thread>();
+	        	 for(int index=0; index<args.length(); index++){
 	        		 String ip = args.getString(index);
-	        		 threadList.put(new Thread(new ClientThread(ip)));
+	        		 threadList.add(new Thread(new ClientThread(ip)));
 	        	 }
-	        	 for(int i = 0; i < threadList.length; i++){
-	        		 threadList[i].join();
+	        	 for(int i = 0; i < threadList.size(); i++){
+	        		 threadList.get(i).join();
 	        	 }
 	        	 callbackContext.success(resultList);
 	         } else {
@@ -74,7 +71,7 @@ public class Socket extends CordovaPlugin{
 		 }
      }
 
-	 private void send(String args, CallbackContext callbackContext) {
+	 private void send(JSONArray args, CallbackContext callbackContext) {
 		 try{
 	         if (args != null && args.length() > 0) {
 	        	 String serverIp = args.getString(0);
@@ -83,7 +80,7 @@ public class Socket extends CordovaPlugin{
 	        	 PrintWriter out = new PrintWriter(new BufferedWriter(
 	 					new OutputStreamWriter(socket.getOutputStream())),
 	 					true);
-	 			 out.println(str);
+	 			 out.println(message);
 	        	 callbackContext.success("Message: "+message+"successfully sent.");
 	         } else {
 	             callbackContext.error("No args are input.");
@@ -94,24 +91,22 @@ public class Socket extends CordovaPlugin{
 			 e.printStackTrace();
 		 } catch (Exception e) {
 			 e.printStackTrace();
-		 }catch(Exception e){
-			 callbackContext.error(e.getMessage());
 		 }
      }
 	 
-	 class ClientThread implements Runnable throws Exception{
+	 class ClientThread implements Runnable{
 		
 		private String serverIp;
 
 		ClientThread(String serverIp){
-			this.ip = ip; 
+			this.serverIp = serverIp; 
 		}
 		
 		@Override
 		public void run() {
 			try {
 				InetAddress serverAddr = InetAddress.getByName(serverIp);
-				Socket socket = new Socket(serverAddr, SERVERPORT);
+				java.net.Socket socket = new java.net.Socket(serverAddr, SERVERPORT);
 				socketMap.put(serverIp, socket);
 				
 				resultList.put("Socket connection with "+ serverIp +" is established.");

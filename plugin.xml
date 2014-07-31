@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
     <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-            id="com.example.myPlugin.socket" version="0.2.3">
-        <name>socket</name>
-        <description>Cordova Socket Plugin</description>
+            id="com.example.myPlugin.socketClient" version="0.2.3">
+        <name>socketClient</name>
+        <description>Cordova Socket Client Plugin</description>
         <license>Apache 2.0</license>
-        <keywords>cordova,socket</keywords>
-        <js-module src="www/socket.js" name="Socket">
-            <clobbers target="socket" />
+        <keywords>cordova,socket client</keywords>
+        <js-module src="www/socketClient.js" name="SocketClient">
+            <clobbers target="socketClient" />
         </js-module>
         <platform name="android">
             <config-file target="config.xml" parent="/*">
-                <feature name="Socket">
-                    <param name="android-package" value="com.example.myPlugin.Socket"/>
+                <feature name="SocketClient">
+                    <param name="android-package" value="com.example.myPlugin.SocketClient"/>
                 </feature>
             </config-file>
-            <source-file src="src/android/Socket.java" target-dir="src/com/example/myPlugin"/>
+            <source-file src="src/android/SocketClient.java" target-dir="src/com/example/myPlugin"/>
         </platform>
     </plugin>
