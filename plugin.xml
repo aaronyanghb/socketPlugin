@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+            id="com.example.myPlugin.socket" version="0.2.3">
+        <name>socket</name>
+        <description>Cordova Socket Plugin</description>
+        <license>Apache 2.0</license>
+        <keywords>cordova,socket</keywords>
+        <js-module src="www/socket.js" name="Socket">
+            <clobbers target="socket" />
+        </js-module>
+        <platform name="android">
+            <config-file target="config.xml" parent="/*">
+                <feature name="Socket">
+                    <param name="android-package" value="com.example.myPlugin.Socket"/>
+                </feature>
+            </config-file>
+            <source-file src="src/android/Socket.java" target-dir="src/com/example/myPlugin"/>
+        </platform>
+    </plugin>
