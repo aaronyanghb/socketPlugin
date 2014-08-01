@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -21,7 +22,6 @@ public class SocketClient extends CordovaPlugin{
 	
 	private HashMap<String,Socket> socketMap = new HashMap<String,Socket>();
 	private JSONArray resultList = new JSONArray();
-	private static final int SERVERPORT = 23;
 	
 	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -29,10 +29,14 @@ public class SocketClient extends CordovaPlugin{
 	}
 	
 	 @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if ("connect".equals(action)) {
-            this.connect(args,callbackContext);
-            return true;
+        	cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    connect(args,callbackContext);
+                }
+            });
+        	return true;
         }
         if ("send".equals(action)) {
             this.send(args,callbackContext);
@@ -54,17 +58,19 @@ public class SocketClient extends CordovaPlugin{
 	 private void connect(JSONArray args, CallbackContext callbackContext) {
 		 try{
 	         if (args != null && args.length() > 0) {
+	        	 resultList = new JSONArray();
 	        	 ArrayList<Thread> threadList = new ArrayList<Thread>();
-	        	 for(int index=0; index<args.length(); index++){
+	        	 for(int index=0; index<args.length(); index = index+2){
 	        		 String ip = args.getString(index);
-	        		 Thread thread = new Thread(new ClientThread(ip,callbackContext));
+	        		 int port = args.getInt(index+1);
+	        		 Thread thread = new Thread(new ClientThread(ip,port));
 	        		 thread.start();
 	        		 threadList.add(thread);
 	        	 }
 	        	 for(int i = 0; i < threadList.size(); i++){
-	        		 //threadList.get(i).join();
+	        		 threadList.get(i).join();
 	        	 }
-	        	 //callbackContext.success(resultList);
+	        	 callbackContext.success(resultList);
 	         } else {
 	             callbackContext.error("No IP addresses are input.");
 	         }			 
@@ -72,17 +78,19 @@ public class SocketClient extends CordovaPlugin{
 			 callbackContext.error(e.getMessage());
 		 }
      }
-
+	 
 	 private void send(JSONArray args, CallbackContext callbackContext) {
 		 try{
 	         if (args != null && args.length() > 0) {
-	        	 String serverIp = args.getString(0);
-	        	 String message = args.getString(1);
-	        	 Socket socket = socketMap.get(serverIp);
-	        	 PrintWriter out = new PrintWriter(new BufferedWriter(
-	 					new OutputStreamWriter(socket.getOutputStream())),
-	 					true);
-	 			 out.println(message);
+	        	 String message = args.getString(0);
+	        	 for(Map.Entry<String, Socket> entry:socketMap.entrySet()){
+	        		 Socket socket = (Socket)entry.getValue();
+		        	 PrintWriter out = new PrintWriter(new BufferedWriter(
+			 					new OutputStreamWriter(socket.getOutputStream())),
+			 					true);
+		        	 out.println(message);
+	        	 }
+
 	        	 callbackContext.success("Message: "+message+"successfully sent.");
 	         } else {
 	             callbackContext.error("No args are input.");
@@ -99,21 +107,21 @@ public class SocketClient extends CordovaPlugin{
 	 class ClientThread implements Runnable{
 		
 		private String serverIp;
-		private CallbackContext callbackContext;
+		private int serverPort;
 
-		ClientThread(String serverIp,CallbackContext callbackContext){
+		ClientThread(String serverIp, int serverPort){
 			this.serverIp = serverIp;
-			this.callbackContext = callbackContext;
+			this.serverPort = serverPort;
 		}
 		
 		@Override
 		public void run() {
 			try {
 				InetAddress serverAddr = InetAddress.getByName(serverIp);
-				Socket socket = new Socket(serverAddr, SERVERPORT);
-				socketMap.put(serverIp, socket);
-				resultList.put("Socket connection with "+ serverIp +" is established.");
-				callbackContext.success(resultList);
+				Socket socket = new Socket(serverAddr, serverPort);
+				socketMap.put(serverIp+":"+serverPort, socket);
+				resultList.put("Socket connection with "+ serverIp+":"+serverPort+" is established.");
+				//callbackContext.success(resultList);
 			} catch (UnknownHostException e) {
 				System.out.println(e.getMessage());
 				resultList.put("Socket connection with "+ serverIp +" failed.");
